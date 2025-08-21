@@ -1,39 +1,36 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 public class SistemaDocumentos {
+    private HashMap<String, String> documentos = new HashMap<>();
 
-    private List<String> documentos;
-
-    public SistemaDocumentos() {
-        documentos = new ArrayList<>();
-        documentos.add("Relatorio Financeiro");
-        documentos.add("Plano de Seguranca");
-        documentos.add("Manual do Usuario");
-    }
-
-    public void visualizarDoc(Usuario usuario, String documento) {
-        if (ControleAcesso.podeVisualizar(usuario)) {
-            System.out.println(usuario.getNome() + " está editando o documento:" + documento + ".");
-        }
-    }
-
-    public void editarDoc(Usuario usuario, String documento) {
-        if (ControleAcesso.podeEditar(usuario)) {
-            System.out.println(usuario.getNome() + " está editando o documento:" + documento + ".");
-        }
-    }
-
-    public void excluirDoc(Usuario usuario, String documento) {
-        if (ControleAcesso.podeExcluir(usuario)) {
-            System.out.println(usuario.getNome() + " está excluindo o documento:" + documento + ".");
-        }
+    public void criarDocumento(String nome) {
+        documentos.put(nome, "");
     }
 
     public void listarDocumentos() {
-        System.out.println("Documentos disponíveis:");
-        for (String doc : documentos) {
-            System.out.println("- " + doc);
+        if (documentos.isEmpty()) {
+            System.out.println("Nenhum documento cadastrado.");
+        } else {
+            System.out.println("Documentos disponíveis:");
+            for (String nome : documentos.keySet()) {
+                System.out.println("- " + nome);
+            }
         }
+    }
+
+    public String lerDocumento(String nome) {
+        return documentos.get(nome);
+    }
+
+    public void editarDocumento(String nome, String conteudo) {
+        documentos.put(nome, conteudo);
+    }
+
+    public boolean existeDocumento(String nome) {
+        return documentos.containsKey(nome);
+    }
+    
+    public void excluirDocumento(String nome) {
+        documentos.remove(nome);
     }
 }

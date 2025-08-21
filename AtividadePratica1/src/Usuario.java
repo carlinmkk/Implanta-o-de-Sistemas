@@ -32,6 +32,11 @@ public class Usuario {
     public Perfil getPerfil() {
         return perfil;
     }
+
+    public boolean podeEditar() {
+        return perfil == Perfil.ADMIN || perfil == Perfil.EDITOR;
+    }
+    
     @Override
     public String toString() {
         return "\n\n     Usuario\n_________________" +

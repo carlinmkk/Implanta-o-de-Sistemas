@@ -1,23 +1,18 @@
+import java.util.ArrayList;
+
 public class ControleAcesso {
+    private ArrayList<Usuario> usuarios = new ArrayList<>();
 
-    public static boolean podeEditar(Usuario usuario) {
-        if (usuario.getPerfil() == Perfil.ADMIN || usuario.getPerfil() == Perfil.EDITOR) {
-            return true;
-        } else {
-            return false;
-        }
+    public void adicionarUsuario(Usuario usuario) {
+        usuarios.add(usuario);
     }
 
-    public static boolean podeVisualizar(Usuario usuario) {
-        return true;
-
-    }
-
-    public static boolean podeExcluir(Usuario usuario) {
-        if (usuario.getPerfil() == Perfil.ADMIN) {
-            return true;
-        } else {
-            return false;
+    public Usuario login(String nome, String senha) {
+        for (Usuario u : usuarios) {
+            if (u.getNome().equalsIgnoreCase(nome) && u.getSenha().equals(senha)) {
+                return u;
+            }
         }
+        return null;
     }
 }

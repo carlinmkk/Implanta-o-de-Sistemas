@@ -1,131 +1,196 @@
 import java.util.Scanner;
 
 public class Main {
+    public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
+        SistemaDocumentos sistema = new SistemaDocumentos();
+        ControleAcesso controle = new ControleAcesso();
 
-    public static void limparConsole() {
+        // Criação de Usuários
+        controle.adicionarUsuario(new Usuario("Carlos", "admin123", Perfil.ADMIN));
+        controle.adicionarUsuario(new Usuario("Rafael", "edt123", Perfil.EDITOR));
+        controle.adicionarUsuario(new Usuario("Magno", "vis123", Perfil.VISUALIZADOR));
+
+        System.out.println("===== Sistema de Documentos RedeMaxi =====");
+
+        boolean programaRodando = true;
+
+        while (programaRodando) {
+            //Login
+            Usuario usuarioLogado = null;
+            while (usuarioLogado == null) {
+                System.out.print("Usuário: ");
+                String nome = input.nextLine();
+                System.out.print("Senha: ");
+                String senha = input.nextLine();
+
+                usuarioLogado = controle.login(nome, senha);
+
+                if (usuarioLogado == null) {
+                    System.out.println("Usuário ou senha inválidos. Tente novamente.");
+                }
+            }
+
+            Clear();
+            System.out.println("Bem-vindo, " + usuarioLogado.getNome() + " (" + usuarioLogado.getPerfil() + ")!");
+            esperar(2);
+
+            boolean sessaoAtiva = true;
+            while (sessaoAtiva) {
+                Clear();
+                System.out.println("\n===== MENU PRINCIPAL =====");
+
+                int contador = 1;
+
+                // Opções básicas (todos podem)
+                System.out.println(contador++ + " - Listar documentos");
+                System.out.println(contador++ + " - Visualizar documento");
+
+                int opcaoExtra = contador;
+
+                // Se pode editar (Admin e Editor)
+                if (usuarioLogado.podeEditar()) {
+                    System.out.println(opcaoExtra++ + " - Editar documento");
+                }
+
+                // Se for Admin
+                if (usuarioLogado.getPerfil() == Perfil.ADMIN) {
+                    System.out.println(opcaoExtra++ + " - Criar documento");
+                    System.out.println(opcaoExtra++ + " - Excluir documento");
+                }
+
+                // Finalizar sessão
+                System.out.println(opcaoExtra++ + " - Finalizar sessão");
+
+                // Encerrar programa
+                System.out.println(opcaoExtra + " - Sair do programa");
+
+                System.out.print("Escolha: ");
+                int escolha;
+                try {
+                    escolha = Integer.parseInt(input.nextLine());
+                } catch (Exception e) {
+                    System.out.println("Opção inválida!");
+                    esperar(2);
+                    continue;
+                }
+
+                contador = 1;
+
+                // 1 - Listar
+                if (escolha == contador++) {
+                    Clear();
+                    sistema.listarDocumentos();
+                    esperar(2);
+                    continue;
+                }
+
+                // 2 - Visualizar
+                if (escolha == contador++) {
+                    System.out.print("Digite o nome do documento para visualizar: ");
+                    String nomeVer = input.nextLine();
+                    Clear();
+                    if (sistema.existeDocumento(nomeVer)) {
+                        String conteudo = sistema.lerDocumento(nomeVer);
+                        System.out.println("\nConteúdo do documento '" + nomeVer + "':");
+                        System.out.println(conteudo.isEmpty() ? "[Vazio]" : conteudo);
+                    } else {
+                        System.out.println("Documento não encontrado.");
+                    }
+                    esperar(2);
+                    continue;
+                }
+
+                // Se pode editar
+                if (usuarioLogado.podeEditar()) {
+                    if (escolha == contador++) {
+                        System.out.print("Digite o nome do documento para editar: ");
+                        String nomeEdit = input.nextLine();
+                        Clear();
+                        if (sistema.existeDocumento(nomeEdit)) {
+                            System.out.println("Digite o novo conteúdo: ");
+                            String novoConteudo = input.nextLine();
+                            sistema.editarDocumento(nomeEdit, novoConteudo);
+                            System.out.println("Documento atualizado com sucesso!");
+                        } else {
+                            System.out.println("Documento não encontrado.");
+                        }
+                        esperar(2);
+                        continue;
+                    }
+                }
+
+                // Se for Admin
+                if (usuarioLogado.getPerfil() == Perfil.ADMIN) {
+                    if (escolha == contador++) {
+                        System.out.print("Digite o nome do documento: ");
+                        String nomeDoc = input.nextLine();
+                        Clear();
+                        sistema.criarDocumento(nomeDoc);
+                        System.out.println("Documento '" + nomeDoc + "' criado com sucesso!");
+                        esperar(2);
+                        continue;
+                    }
+
+                    if (escolha == contador++) {
+                        System.out.print("Digite o nome do documento para excluir: ");
+                        String nomeExc = input.nextLine();
+                        Clear();
+                        if (sistema.existeDocumento(nomeExc)) {
+                            sistema.excluirDocumento(nomeExc);
+                            System.out.println("Documento '" + nomeExc + "' excluído com sucesso!");
+                        } else {
+                            System.out.println("Documento não encontrado.");
+                        }
+                        esperar(2);
+                        continue;
+                    }
+                }
+
+                // Finalizar sessão
+                if (escolha == contador++) {
+                    System.out.println("Sessão finalizada. Voltando para tela de login...");
+                    esperar(2);
+                    sessaoAtiva = false;
+                    Clear();
+                    continue;
+                }
+
+                // Encerrar programa
+                if (escolha == contador) {
+                    System.out.println("Encerrando sistema. Até logo!");
+                    esperar(2);
+                    sessaoAtiva = false;
+                    programaRodando = false;
+                    input.close();
+                    Clear();
+                    break;
+                }
+
+                System.out.println("Opção inválida!");
+                esperar(1);
+            }
+        }
+    }
+
+    public static void Clear() {
         try {
             if (System.getProperty("os.name").contains("Windows")) {
                 new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
             } else {
-                System.out.print("\033[H\033[2J");
+                System.out.print("\033[H\033[2J"); // Para Linux/Mac
                 System.out.flush();
             }
         } catch (Exception e) {
-            System.out.println("Não foi possível limpar o console.");
+            System.out.println("Não foi possível limpar a tela.");
         }
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        Scanner input = new Scanner(System.in);
-
-        SistemaDocumentos sistema = new SistemaDocumentos();
-        ControleAcesso controle = new ControleAcesso();
-
-        Usuario admin = new Usuario("Carlos", "adm123", Perfil.ADMIN);
-        Usuario editor = new Usuario("Rafael", "edi123", Perfil.EDITOR);
-        Usuario visualizador = new Usuario("Magno", "visu123", Perfil.VISUALIZADOR);
-
-        while (true) { // loop infinito até usuário decidir sair
-            limparConsole();
-            System.out.println("\n    ---Sistema RedeMaxi---");
-
-            System.out.print("Informe seu nome: ");
-            String nome = input.nextLine();
-
-            System.out.print("Informe sua senha: ");
-            String senha = input.nextLine();
-
-            Usuario usuarioAtual = null;
-
-            if (nome.equals(admin.getNome()) && senha.equals(admin.getSenha())) {
-                usuarioAtual = admin;
-            } else if (nome.equals(editor.getNome()) && senha.equals(editor.getSenha())) {
-                usuarioAtual = editor;
-            } else if (nome.equals(visualizador.getNome()) && senha.equals(visualizador.getSenha())) {
-                usuarioAtual = visualizador;
-            } else {
-                System.out.println("Usuário ou senha inválidos.");
-                Thread.sleep(2000); // espera 2 segundos
-                continue; // volta pro login
-            }
-
-            limparConsole();
-            System.out.println("Bem-vindo, " + usuarioAtual.getNome() + "! (" + usuarioAtual.getPerfil() + ")");
-            Thread.sleep(1000);
-
-            // Menu dinâmico
-            System.out.println("\nSelecione uma opção:");
-            if (controle.podeEditar(usuarioAtual)) {
-                System.out.println("1. Editar Documento");
-            }
-            if (controle.podeVisualizar(usuarioAtual)) {
-                System.out.println("2. Visualizar Documento");
-            }
-            if (controle.podeExcluir(usuarioAtual)) {
-                System.out.println("3. Excluir Documento");
-            }
-            System.out.println("0. Sair");
-            System.out.print("Opção: ");
-
-            int opcao = input.nextInt();
-            input.nextLine(); // limpar buffer
-
-            switch (opcao) {
-                case 1: // Editar
-                    if (controle.podeEditar(usuarioAtual)) {
-                        sistema.listarDocumentos();
-                        System.out.println("Digite o nome do documento que deseja editar:");
-                        String docParaEditar = input.nextLine();
-
-                        if (!docParaEditar.equals("Relatorio Financeiro")
-                                && !docParaEditar.equals("Plano de Seguranca")
-                                && !docParaEditar.equals("Manual do Usuario")) {
-                            System.out.println("Documento não encontrado.");
-                            break;
-                        }
-
-                        System.out.println(usuarioAtual.getNome() + " está editando o documento: " + docParaEditar + ".");
-                        Thread.sleep(1000);
-                        System.out.println("Documento editado com sucesso.");
-                    } else {
-                        System.out.println("Você não tem permissão para essa ação.");
-                    }
-                    break;
-
-                case 2: // Visualizar
-                    if (controle.podeVisualizar(usuarioAtual)) {
-                        sistema.listarDocumentos();
-                        System.out.println("Digite o nome do documento que deseja visualizar:");
-                        String docParaVer = input.nextLine();
-                        sistema.visualizarDoc(usuarioAtual, docParaVer);
-                    } else {
-                        System.out.println("Você não tem permissão para essa ação.");
-                    }
-                    break;
-
-                case 3: // Excluir
-                    if (controle.podeExcluir(usuarioAtual)) {
-                        sistema.listarDocumentos();
-                        System.out.println("Digite o nome do documento que deseja excluir:");
-                        String docParaExcluir = input.nextLine();
-                        sistema.excluirDoc(usuarioAtual, docParaExcluir);
-                    } else {
-                        System.out.println("Você não tem permissão para essa ação.");
-                    }
-                    break;
-
-                case 0: // Sair do sistema
-                    System.out.println("Saindo do sistema...");
-                    Thread.sleep(2000);
-                    input.close();
-                    return;
-
-                default:
-                    System.out.println("Opção inválida.");
-            }
-
-            System.out.println("\nVoltando ao login...");
-            Thread.sleep(2000);
+    public static void esperar(int segundos) {
+        try {
+            Thread.sleep(segundos * 1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }
